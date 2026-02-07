@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>24 Game</title>
+
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#1e3c72,#2a5298);
+    color:white;
+    text-align:center;
+}
+h1{
+    margin-top:30px;
+    font-size:48px;
+}
+.container{
+    margin-top:30px;
+}
+.btn{
+    padding:18px 28px;
+    margin:10px;
+    font-size:24px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    background:#eee;
+    box-shadow:0 6px 0 #aaa;
+    transition:0.15s;
+}
+.btn:active{
+    transform:translateY(6px);
+    box-shadow:0 0 0 #aaa;
+}
+.btn.active{
+    background:#4da3ff;
+    color:white;
+}
+.op{
+    width:70px;
+    background:#ffd966;
+}
+#numbers,#ops{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+footer{
+    margin-top:30px;
+    opacity:0.7;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>24 GAME</h1>
+
+<button id="playBtn" class="btn">▶ PLAY</button>
+
+<div id="game" class="container" style="display:none;">
+    <div id="numbers"></div>
+    <div id="ops"></div>
+    <p>แตะเลข → เครื่องหมาย → เลข</p>
+    <button class="btn" onclick="resetGame()">🔄 RESET</button>
+</div>
+
+<footer>เล่นได้บนมือถือ & Chrome</footer>
+
+<!-- เสียงคลิก -->
+<audio id="clickSound">
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8c9c02e7f0.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let numbers=[], selectedNums=[], selectedOp=null;
+const ops=["+","-","*","/"];
+const sound=document.getElementById("clickSound");
+
+function clickSound(){ sound.currentTime=0; sound.play(); }
+
+function randomNumbers(){
+    return Array.from({length:4},()=>Math.floor(Math.random()*9)+1);
+}
+
+document.getElementById("playBtn").onclick=()=>{
+    clickSound();
+    document.getElementById("playBtn").style.display="none";
+    document.getElementById("game").style.display="block";
+    resetGame();
+};
+
+function resetGame(){
+    clickSound();
+    numbers=randomNumbers();
+    selectedNums=[];
+    selectedOp=null;
+    draw();
+}
+
+function draw(){
+    const n=document.getElementById("numbers");
+    const o=document.getElementById("ops");
+    n.innerHTML=""; o.innerHTML="";
+
+    numbers.forEach((num,i)=>{
+        let b=document.createElement("button");
+        b.className="btn";
+        if(selectedNums.includes(i)) b.classList.add("active");
+        b.textContent=num;
+        b.onclick=()=>selectNum(i);
+        n.appendChild(b);
+    });
+
+    ops.forEach(op=>{
+        let b=document.createElement("button");
+        b.className="btn op";
+        if(selectedOp===op) b.classList.add("active");
+        b.textContent=op;
+        b.onclick=()=>selectOp(op);
+        o.appendChild(b);
+    });
+}
+
+function selectNum(i){
+    clickSound();
+    if(!selectedNums.includes(i)&&selectedNums.length<2){
+        selectedNums.push(i);
+        calc();
+        draw();
+    }
+}
+
+function selectOp(op){
+    clickSound();
+    if(selectedNums.length===1){
+        selectedOp=op;
+        draw();
+    }
+}
+
+function calc(){
+    if(selectedNums.length===2&&selectedOp){
+        let [i1,i2]=selectedNums;
+        let a=numbers[i1], b=numbers[i2], r;
+
+        try{
+            if(selectedOp==="+") r=a+b;
+            else if(selectedOp==="*") r=a*b;
+            else if(selectedOp==="-") r=Math.abs(a-b);
+            else if(selectedOp==="/"){
+                if(b===0||a%b!==0) throw 0;
+                r=a/b;
+            }
+
+            numbers=numbers.filter((_,i)=>i!==i1&&i!==i2);
+            numbers.push(r);
+
+            if(numbers.length===1){
+                setTimeout(()=>{
+                    alert(numbers[0]===24?"🎉 YOU WIN!":"❌ TRY AGAIN");
+                    resetGame();
+                },150);
+            }
+        }catch{}
+
+        selectedNums=[];
+        selectedOp=null;
+    }
+}
+</script>
+
+</body>
+</html>
